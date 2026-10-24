@@ -6,9 +6,24 @@ Opiniones de clientes para negocios locales, con resúmenes hechos por IA.
 
 El cliente acerca el móvil a una tarjeta NFC o escanea un QR en la mesa, la peluquería o el gimnasio, y deja su opinión en 20 segundos. El negocio ve en un panel qué funciona y qué no. Por ejemplo: *"esta semana seis personas se quejan de la espera de los sábados"*.
 
-> **Estado:** fase 2 de 4. Están hechas la API de opiniones y las cuentas de negocio con inicio de sesión. El panel en Angular y la IA llegan en las siguientes fases ([hoja de ruta](#hoja-de-ruta)).
+> **Estado:** fase 3 de 4. Funcionan el formulario para el cliente, el panel del negocio y las cuentas. La IA llega en la última fase ([hoja de ruta](#hoja-de-ruta)).
+
+<p align="center">
+  <img src="docs/capturas/formulario.png" width="260" alt="Formulario del cliente en el móvil: cinco notas grandes y un comentario opcional">
+  &nbsp;&nbsp;
+  <img src="docs/capturas/panel.png" width="560" alt="Panel del negocio con la nota media, el reparto de notas y las últimas opiniones">
+</p>
 
 ## Qué hace ya
+
+### La aplicación (Angular)
+
+- **`/n/{slug}`: el formulario del cliente.** Pensado para el móvil: cinco notas grandes para el pulgar, comentario opcional y, al terminar, el enlace para dejar también la reseña en Google.
+- **`/entrar` y `/registro`.**
+- **`/panel`: los negocios a los que tienes acceso**, o el alta del primero. El enlace del negocio se genera solo a partir del nombre ("Peluquería Ñandú" pasa a ser `peluqueria-nandu`).
+- **`/panel/{slug}`: el panel del negocio.** Nota media, reparto de notas, últimas opiniones con "ver más", enlace para copiar a la tarjeta NFC o al QR, y quién tiene acceso (solo lo ve el dueño).
+
+### La API
 
 **Para el cliente que opina** (sin cuenta):
 
@@ -61,6 +76,14 @@ Los errores siguen el estándar Problem Details (RFC 9457) e indican qué campo 
 - **Solo se puede añadir como empleado a quien ya tiene cuenta**, así nadie recibe una contraseña elegida por otra persona.
 - **Sin CSRF ni sesiones en el servidor:** el token viaja en la cabecera `Authorization`, no en una cookie.
 
+### Frontend
+
+- **Angular 22 sin zone.js, con signals y componentes standalone.** Cada pantalla se descarga solo cuando se visita (*lazy loading*), así el cliente que opina no descarga el código del panel.
+- **Las reglas de validación están solo en el servidor.** El formulario de registro no las repite; muestra los mensajes que devuelve la API debajo de cada campo. Así no hay dos versiones de las reglas que puedan contradecirse.
+- **Un interceptor añade el token a las llamadas a `/api/`** y a nada más. Si el servidor responde 401, cierra la sesión y lleva a entrar, recordando a qué página se quería ir. La vuelta solo acepta rutas del panel, para que un enlace manipulado no pueda llevar a otra web.
+- **El token se guarda en `localStorage`** para no perder la sesión al recargar. El precio es que un fallo de XSS podría leerlo. Angular escapa todo lo que pinta y la app no usa `innerHTML`; el siguiente paso sería pasar a una cookie `HttpOnly`.
+- **Accesible:** las notas son botones de opción de verdad (se pueden usar con teclado y lector de pantalla), cada campo tiene su etiqueta, se respeta el modo oscuro del sistema y la preferencia de reducir animaciones.
+
 ### Datos y API
 
 - **Sin filtrar a los clientes descontentos.** Muchas herramientas de reseñas solo mandan a Google a quien pone 4 o 5 estrellas. Eso se llama *review gating* y va contra las normas de Google. Opina devuelve el enlace de reseña sea cual sea la nota, y hay un test que lo comprueba (`tambienOfreceGoogleAQuienPuntuaBajo`). El valor para el negocio está en entender las opiniones, no en esconderlas.
@@ -71,12 +94,16 @@ Los errores siguen el estándar Problem Details (RFC 9457) e indican qué campo 
 
 ## Cómo arrancarlo
 
-Necesitas Java 21 y PostgreSQL 17. Lo más sencillo para tener PostgreSQL es Docker:
+Necesitas Java 21, Node 24 y PostgreSQL 17. Lo más sencillo para tener PostgreSQL es Docker:
 
 ```bash
 docker compose up -d                                   # PostgreSQL en localhost:5432
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=demo # API en localhost:8080
+
+cd frontend && npm install && npm start                # App en localhost:4200 (las llamadas a /api van a la API)
 ```
+
+Abre `http://localhost:4200/n/bar-la-plaza` para opinar como cliente y `http://localhost:4200/panel` para ver el panel.
 
 El perfil `demo` carga **Bar La Plaza**, un bar inventado con 12 opiniones de ejemplo, y la cuenta de su dueña:
 
@@ -88,19 +115,22 @@ Variables de entorno: `DB_URL`, `DB_USER`, `DB_PASSWORD` y `JWT_SECRET` (al meno
 ### Tests
 
 ```bash
-./mvnw test                                                      # con Docker
-DB_URL=jdbc:postgresql://localhost:5432/opina_test ./mvnw test   # sin Docker, contra un PostgreSQL propio
+./mvnw test                                                      # API, con Docker
+DB_URL=jdbc:postgresql://localhost:5432/opina_test ./mvnw test   # API, sin Docker, contra un PostgreSQL propio
+cd frontend && npx ng test --watch=false                         # App (Vitest)
 ```
 
 ## Tecnologías
 
-Java 21 · Spring Boot 4.1 · Spring Security (OAuth2 Resource Server, JWT) · Spring Data JPA (Hibernate) · PostgreSQL 17 · Flyway · Bean Validation · springdoc-openapi · JUnit 5 · AssertJ · Testcontainers · GitHub Actions
+- **Backend:** Java 21 · Spring Boot 4.1 · Spring Security (OAuth2 Resource Server, JWT) · Spring Data JPA (Hibernate) · PostgreSQL 17 · Flyway · Bean Validation · springdoc-openapi
+- **Frontend:** Angular 22 (signals, standalone, sin zone.js) · TypeScript · Reactive Forms · CSS propio, sin librerías de componentes
+- **Calidad:** JUnit 5 · AssertJ · Testcontainers · Vitest · Prettier · GitHub Actions
 
 ## Hoja de ruta
 
 - [x] **Fase 1:** API de negocios y opiniones, validación, tests y CI
 - [x] **Fase 2:** cuentas de negocio con Spring Security y JWT (dueño y empleado); el listado y el resumen pasan a ser privados
-- [ ] **Fase 3:** formulario público y panel del negocio en Angular
+- [x] **Fase 3:** formulario público y panel del negocio en Angular
 - [ ] **Fase 4:** IA con la API de Claude: tema y urgencia de cada opinión, resumen semanal y propuesta de respuesta a cada queja
 - [ ] Despliegue con una demo pública
 
