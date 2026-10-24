@@ -26,9 +26,11 @@ import java.util.UUID;
 public class OpinionController {
 
     private final OpinionService servicio;
+    private final InformeService informes;
 
-    public OpinionController(OpinionService servicio) {
+    public OpinionController(OpinionService servicio, InformeService informes) {
         this.servicio = servicio;
+        this.informes = informes;
     }
 
     /** Público: lo usa el formulario al que llega el cliente desde la tarjeta NFC o el QR. */
@@ -54,5 +56,16 @@ public class OpinionController {
     @GetMapping("/resumen")
     public Resumen resumen(@AuthenticationPrincipal Jwt jwt, @PathVariable String slug) {
         return servicio.resumen(slug, UUID.fromString(jwt.getSubject()));
+    }
+
+    /** Temas, opiniones urgentes y resumen escrito por la IA de los últimos días. */
+    @GetMapping("/informe")
+    public InformeService.Informe informe(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable String slug,
+            @RequestParam(defaultValue = "7")
+            @Min(value = 1, message = "Los días van de 1 a 90")
+            @Max(value = 90, message = "Los días van de 1 a 90") int dias) {
+        return informes.informe(slug, UUID.fromString(jwt.getSubject()), dias);
     }
 }
