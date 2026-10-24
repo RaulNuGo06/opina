@@ -1,0 +1,74 @@
+<section class="informe" aria-labelledby="t-informe" [attr.aria-busy]="cargando()">
+  <div class="cabecera">
+    <h2 id="t-informe">Lo que dicen tus clientes</h2>
+    <div class="periodos" role="group" aria-label="Periodo">
+      @for (p of periodos; track p) {
+        <button type="button" [attr.aria-pressed]="dias() === p" (click)="elegir(p)">
+          {{ p }} días
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (error()) {
+    <p class="aviso-error" role="alert">{{ error() }}</p>
+  }
+
+  @if (datos(); as d) {
+    @if (d.total === 0) {
+      <p class="suave">No hay opiniones en los últimos {{ d.dias }} días.</p>
+    } @else {
+      @if (d.resumen) {
+        <div class="resumen-ia">
+          <p>{{ d.resumen }}</p>
+          <p class="firma">
+            Resumen hecho con IA a partir de las opiniones con comentario ·
+            {{ haceCuanto(d.resumenGeneradoEn!) }}
+          </p>
+        </div>
+      }
+
+      @if (d.iaActiva && d.pendientes > 0) {
+        <p class="analizando">
+          Analizando {{ d.pendientes }}
+          {{ d.pendientes === 1 ? 'opinión nueva' : 'opiniones nuevas' }}…
+          <button type="button" class="enlace" (click)="actualizar()">Actualizar</button>
+        </p>
+      }
+
+      @if (d.urgentes.length > 0) {
+        <div class="urgentes">
+          <h3>Para atender cuanto antes</h3>
+          <ul>
+            @for (o of d.urgentes; track o.id) {
+              <li>
+                <p>{{ o.comentario }}</p>
+                <span class="suave">
+                  {{ o.puntuacion }} de 5 · {{ temasNombre[o.tema!] }} ·
+                  {{ haceCuanto(o.creadaEn) }}
+                </span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      @if (temas().length > 0) {
+        <h3>De qué hablan</h3>
+        <ol class="temas" aria-label="Opiniones por tema">
+          @for (fila of temas(); track fila.tema) {
+            <li>
+              <span class="nombre">{{ temasNombre[fila.tema] }}</span>
+              <span class="barra" aria-hidden="true"
+                ><span [style.width.%]="fila.ancho"></span
+              ></span>
+              <span class="cuantas">{{ fila.cuantas }}</span>
+            </li>
+          }
+        </ol>
+      }
+    }
+  } @else if (cargando()) {
+    <p class="suave">Cargando…</p>
+  }
+</section>

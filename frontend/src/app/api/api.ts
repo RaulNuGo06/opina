@@ -35,11 +35,30 @@ export interface NegocioDelPanel {
   rol: Rol;
 }
 
+/** Los temas en los que la IA reparte las opiniones (lista cerrada, igual que en el backend) */
+export type Tema = 'ATENCION' | 'ESPERA' | 'CALIDAD' | 'PRECIO' | 'LIMPIEZA' | 'AMBIENTE' | 'OTRO';
+
 export interface Opinion {
   id: string;
   puntuacion: number;
   comentario: string | null;
   creadaEn: string;
+  /** null mientras la IA no la haya clasificado, o si no tiene comentario */
+  tema: Tema | null;
+  sentimiento: 'POSITIVO' | 'NEUTRO' | 'NEGATIVO' | null;
+  urgente: boolean;
+}
+
+export interface Informe {
+  dias: number;
+  total: number;
+  porTema: Record<Tema, number>;
+  urgentes: Opinion[];
+  /** Opiniones del periodo que la IA aún no ha clasificado */
+  pendientes: number;
+  iaActiva: boolean;
+  resumen: string | null;
+  resumenGeneradoEn: string | null;
 }
 
 export interface Pagina<T> {
@@ -111,6 +130,12 @@ export class Api {
 
   resumen(slug: string) {
     return firstValueFrom(this.http.get<Resumen>(`/api/negocios/${enc(slug)}/opiniones/resumen`));
+  }
+
+  informe(slug: string, dias: number) {
+    return firstValueFrom(
+      this.http.get<Informe>(`/api/negocios/${enc(slug)}/opiniones/informe`, { params: { dias } }),
+    );
   }
 
   miembros(slug: string) {

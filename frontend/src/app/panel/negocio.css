@@ -198,8 +198,30 @@ h2 {
   font-style: italic;
 }
 
+.detalles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+}
+
 time {
   font-size: 0.9rem;
+}
+
+.chip {
+  font-size: 0.8rem;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  background: var(--encina-clara);
+  color: var(--encina);
+}
+
+.chip.urgente {
+  background: var(--queja-clara);
+  color: var(--queja);
+  font-weight: 600;
 }
 
 .mas {
