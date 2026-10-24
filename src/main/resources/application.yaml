@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: opina
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/opina}
+    username: ${DB_USER:opina}
+    password: ${DB_PASSWORD:opina}
+  jpa:
+    open-in-view: false
+    hibernate:
+      # El esquema lo crea Flyway; Hibernate solo comprueba que las entidades encajan con él
+      ddl-auto: validate
+  mvc:
+    problemdetails:
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+springdoc:
+  swagger-ui:
+    path: /docs
+
+---
+spring:
+  config:
+    activate:
+      on-profile: demo
+  flyway:
+    locations: classpath:db/migration,classpath:db/demo
