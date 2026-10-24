@@ -6,7 +6,7 @@ Opiniones de clientes para negocios locales, con resúmenes hechos por IA. El no
 
 El cliente acerca el móvil a una tarjeta NFC o escanea un QR en la mesa, la peluquería o el gimnasio, y deja su opinión en 20 segundos. El negocio ve en un panel qué funciona y qué no. Por ejemplo: *"esta semana seis personas se quejan de la espera de los sábados"*.
 
-> **Estado:** fase 3 de 4. Funcionan el formulario para el cliente, el panel del negocio y las cuentas. La IA llega en la última fase ([hoja de ruta](#hoja-de-ruta)).
+> **Estado:** fase 4 de 5. Funcionan el formulario para el cliente, el panel, las cuentas y la IA: cada opinión se clasifica por tema y urgencia, y el panel trae un resumen escrito por Claude. Falta proponer respuestas a las quejas y publicar una demo ([hoja de ruta](#hoja-de-ruta)).
 
 <p align="center">
   <img src="docs/capturas/formulario.png" width="260" alt="Formulario del cliente en el móvil: cinco notas grandes y un comentario opcional">
@@ -21,7 +21,8 @@ El cliente acerca el móvil a una tarjeta NFC o escanea un QR en la mesa, la pel
 - **`/n/{slug}`: el formulario del cliente.** Pensado para el móvil: cinco notas grandes para el pulgar, comentario opcional y, al terminar, el enlace para dejar también la reseña en Google.
 - **`/entrar` y `/registro`.**
 - **`/panel`: los negocios a los que tienes acceso**, o el alta del primero. El enlace del negocio se genera solo a partir del nombre ("Peluquería Ñandú" pasa a ser `peluqueria-nandu`).
-- **`/panel/{slug}`: el panel del negocio.** Nota media, reparto de notas, últimas opiniones con "ver más", enlace para copiar a la tarjeta NFC o al QR, y quién tiene acceso (solo lo ve el dueño).
+- **`/panel/{slug}`: el panel del negocio.** Nota media, reparto de notas, últimas opiniones con "ver más" (cada una con su tema y, si lo es, marcada como urgente), enlace para copiar a la tarjeta NFC o al QR, y quién tiene acceso (solo lo ve el dueño).
+- **"Lo que dicen tus clientes"**, dentro del panel: un resumen escrito por la IA, las opiniones que conviene atender cuanto antes y de qué temas se habla, en los últimos 7, 30 o 90 días.
 
 ### La API
 
@@ -41,6 +42,7 @@ El cliente acerca el móvil a una tarjeta NFC o escanea un QR en la mesa, la pel
 | `POST` | `/api/negocios` | Con sesión | Dar de alta un negocio; quien lo crea queda como dueño |
 | `GET` | `/api/negocios/{slug}/opiniones?pagina=0&tamano=20` | Dueño o empleado | Opiniones de la más nueva a la más antigua |
 | `GET` | `/api/negocios/{slug}/opiniones/resumen` | Dueño o empleado | Total, nota media y cuántas hay de cada nota |
+| `GET` | `/api/negocios/{slug}/opiniones/informe?dias=7` | Dueño o empleado | Temas, opiniones urgentes y resumen escrito por la IA |
 | `GET` `POST` `DELETE` | `/api/negocios/{slug}/miembros` | Dueño | Ver, añadir o quitar empleados |
 
 La documentación interactiva (Swagger UI) está en `/docs`. Para probar lo privado, entra con `/api/auth/login`, copia el token y pégalo en el botón **Authorize**.
@@ -65,6 +67,17 @@ Los errores siguen el estándar Problem Details (RFC 9457) e indican qué campo 
 ```
 
 ## Decisiones técnicas
+
+### IA (Claude)
+
+- **El cliente nunca espera a la IA.** Opinar responde al momento; un proceso en segundo plano recoge cada pocos segundos las opiniones pendientes y las clasifica con Claude: tema, sentimiento y si es urgente.
+- **Varias instancias sin pisarse.** Cada opinión se coge con `SELECT … FOR UPDATE SKIP LOCKED` en su propia transacción, así dos servidores nunca clasifican la misma. Un índice parcial (`where estado_ia = 'PENDIENTE'`) mantiene la búsqueda rápida aunque haya muchas opiniones.
+- **Si la IA falla, no se insiste.** La vuelta se detiene al primer error (lo normal es que la API esté caída o saturada) y se reintenta en la siguiente; al tercer fallo esa opinión se deja como `FALLIDA`. Las opiniones sin comentario no gastan ninguna llamada.
+- **Temas de una lista cerrada.** La respuesta de Claude se fuerza a un esquema JSON derivado de un `record` de Java (salidas estructuradas), así solo puede devolver temas que el panel sabe contar y comparar.
+- **El texto del cliente es un dato, no instrucciones.** Va dentro de etiquetas, el prompt de sistema lo dice expresamente, y la salida estructurada limita lo que puede volver. Un cliente que escribe "ignora tus instrucciones" solo consigue una opinión más.
+- **El resumen no se paga dos veces.** Se guarda con una "huella" de las opiniones del periodo y solo se vuelve a pedir si entra una opinión nueva o la IA termina de clasificar alguna. Si Claude falla, se enseña el último resumen guardado.
+- **Sin clave de API, todo sigue funcionando**: el panel muestra las cifras y no aparece el resumen. Los tests usan un asistente falso detrás de la interfaz `AsistenteIa`, así que la CI no hace llamadas reales ni gasta dinero.
+- **Coste y modelo.** Por defecto `claude-opus-5-5` con esfuerzo bajo para clasificar y medio para resumir. Se cambia con `OPINA_IA_MODELO` sin tocar código (por ejemplo, `claude-haiku-5-5` para gastar menos). Las peticiones activan el *fallback* del servidor: si un filtro de seguridad rechaza una, la API la reintenta con otro modelo.
 
 ### Seguridad
 
@@ -110,7 +123,13 @@ El perfil `demo` carga **Bar La Plaza**, un bar inventado con 12 opiniones de ej
 - Email: `dueno@barlaplaza.demo`
 - Contraseña: `demo-opina-2026`
 
-Variables de entorno: `DB_URL`, `DB_USER`, `DB_PASSWORD` y `JWT_SECRET` (al menos 32 caracteres).
+Las opiniones de ejemplo ya vienen clasificadas, así que el panel enseña temas y urgencias aunque no tengas clave de API. Para ver el resumen escrito por la IA y que se clasifiquen las opiniones nuevas, arranca la API con tu clave:
+
+```bash
+ANTHROPIC_API_KEY=sk-ant-... ./mvnw spring-boot:run -Dspring-boot.run.profiles=demo
+```
+
+Variables de entorno: `DB_URL`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET` (al menos 32 caracteres), `ANTHROPIC_API_KEY` (opcional), `OPINA_IA_MODELO` (por defecto `claude-opus-5-5`) y `OPINA_IA_INTERVALO` (cada cuánto se clasifican las nuevas, por defecto `PT10S`).
 
 ### Tests
 
@@ -123,6 +142,7 @@ cd frontend && npx ng test --watch=false                         # App (Vitest)
 ## Tecnologías
 
 - **Backend:** Java 21 · Spring Boot 4.1 · Spring Security (OAuth2 Resource Server, JWT) · Spring Data JPA (Hibernate) · PostgreSQL 17 · Flyway · Bean Validation · springdoc-openapi
+- **IA:** API de Claude con el SDK oficial de Java (salidas estructuradas, *fallback* del servidor)
 - **Frontend:** Angular 22 (signals, standalone, sin zone.js) · TypeScript · Reactive Forms · CSS propio, sin librerías de componentes
 - **Calidad:** JUnit 5 · AssertJ · Testcontainers · Vitest · Prettier · GitHub Actions
 
@@ -131,7 +151,8 @@ cd frontend && npx ng test --watch=false                         # App (Vitest)
 - [x] **Fase 1:** API de negocios y opiniones, validación, tests y CI
 - [x] **Fase 2:** cuentas de negocio con Spring Security y JWT (dueño y empleado); el listado y el resumen pasan a ser privados
 - [x] **Fase 3:** formulario público y panel del negocio en Angular
-- [ ] **Fase 4:** IA con la API de Claude: tema y urgencia de cada opinión, resumen semanal y propuesta de respuesta a cada queja
+- [x] **Fase 4:** IA con la API de Claude: tema, sentimiento y urgencia de cada opinión, y resumen de los últimos días
+- [ ] **Fase 5:** propuesta de respuesta a cada queja, escrita por la IA y editable por el dueño
 - [ ] Despliegue con una demo pública
 
 ## Autor
