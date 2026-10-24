@@ -1,0 +1,87 @@
+<main class="hoja">
+  @switch (estado()) {
+    @case ('cargando') {
+      <p class="cargando" aria-live="polite">Cargando…</p>
+    }
+
+    @case ('no-existe') {
+      <h1>Este enlace no funciona</h1>
+      <p class="sub">
+        Puede que el negocio lo haya cambiado. Pide en el local que te enseñen el nuevo.
+      </p>
+    }
+
+    @case ('formulario') {
+      <p class="sub negocio">{{ negocio()!.nombre }}</p>
+      <h1>¿Qué tal ha ido?</h1>
+
+      <form [formGroup]="formulario" (ngSubmit)="enviar()" novalidate>
+        <fieldset class="notas">
+          <legend class="sub">Toca una nota</legend>
+          @for (n of notas; track n.valor) {
+            <label
+              class="nota"
+              [class.llena]="(elegida() ?? 0) >= n.valor"
+              [class.elegida]="elegida() === n.valor"
+            >
+              <input
+                type="radio"
+                name="nota"
+                [value]="n.valor"
+                (change)="elegir(n.valor)"
+                [checked]="elegida() === n.valor"
+              />
+              <span class="numero">{{ n.valor }}</span>
+              <span class="texto">{{ n.texto }}</span>
+            </label>
+          }
+        </fieldset>
+        @if (nota.touched && nota.invalid) {
+          <p class="error-nota" role="alert">Elige una nota del 1 al 5 para enviar</p>
+        }
+
+        <div class="campo">
+          <label for="comentario">¿Algo que contar? <span class="opcional">(opcional)</span></label>
+          <textarea
+            id="comentario"
+            rows="4"
+            maxlength="1000"
+            [formControl]="comentario"
+            placeholder="Lo que más te ha gustado, o lo que mejorarías"
+          ></textarea>
+          <span class="ayuda contador">{{ comentario.value.length }}/1000</span>
+        </div>
+
+        @if (error()) {
+          <p class="aviso-error" role="alert">{{ error() }}</p>
+        }
+
+        <button class="boton enviar" type="submit" [disabled]="enviando()">
+          {{ enviando() ? 'Enviando…' : 'Enviar opinión' }}
+        </button>
+        <p class="privacidad">
+          Tu opinión le llega solo a {{ negocio()!.nombre }}. No pedimos tu nombre ni tu email.
+        </p>
+      </form>
+    }
+
+    @case ('enviada') {
+      <div class="gracias" aria-live="polite">
+        <p class="sub negocio">{{ negocio()!.nombre }}</p>
+        <h1>¡Gracias!</h1>
+        <p>Tu opinión ya le ha llegado al negocio.</p>
+
+        @if (urlGoogle()) {
+          <div class="google">
+            <p>Si quieres, también puedes dejarla en Google para que la vean otros clientes.</p>
+            <a class="boton" [href]="urlGoogle()" target="_blank" rel="noopener"
+              >Escribir reseña en Google</a
+            >
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <p class="marca">Opiniones con <strong>opInA</strong></p>
+</main>

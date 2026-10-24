@@ -1,0 +1,42 @@
+.acceso {
+  max-width: 26rem;
+  margin: 0 auto;
+  padding: 3rem 1rem;
+}
+
+.cabecera-logo {
+  display: block;
+  margin-bottom: 2.5rem;
+}
+
+h1 {
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.intro {
+  color: var(--tinta-suave);
+  margin: 0 0 1.75rem;
+}
+
+form .boton {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.cambiar {
+  margin-top: 1.5rem;
+  color: var(--tinta-suave);
+}
+
+.demo {
+  margin-top: 2rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radio);
+  background: var(--encina-clara);
+  font-size: 0.95rem;
+}
+
+.demo code {
+  font-size: 0.9rem;
+}

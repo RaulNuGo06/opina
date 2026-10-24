@@ -1,0 +1,81 @@
+h1 {
+  font-size: 2.2rem;
+  margin-bottom: 1.25rem;
+}
+
+h2 {
+  font-size: 1.35rem;
+  margin: 2.5rem 0 1rem;
+}
+
+.intro {
+  color: var(--tinta-suave);
+  max-width: 38rem;
+  margin: 0 0 1.75rem;
+}
+
+.lista {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.negocio {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: var(--radio);
+  background: var(--tarjeta);
+  border: 1.5px solid var(--linea);
+  color: var(--tinta);
+  text-decoration: none;
+}
+
+.negocio:hover {
+  border-color: var(--encina);
+}
+
+.nombre {
+  font:
+    600 1.2rem/1.2 'Bricolage Grotesque',
+    system-ui,
+    sans-serif;
+}
+
+.rol {
+  color: var(--tinta-suave);
+  font-size: 0.92rem;
+}
+
+.alta {
+  max-width: 32rem;
+}
+
+.enlace {
+  display: flex;
+  align-items: stretch;
+}
+
+.prefijo {
+  display: flex;
+  align-items: center;
+  padding: 0 0.7rem;
+  border: 1.5px solid var(--linea);
+  border-right: 0;
+  border-radius: var(--radio) 0 0 var(--radio);
+  color: var(--tinta-suave);
+  background: var(--papel);
+}
+
+.enlace input {
+  border-radius: 0 var(--radio) var(--radio) 0;
+}
+
+.opcional {
+  font-weight: 400;
+  color: var(--tinta-suave);
+}

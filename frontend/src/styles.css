@@ -1,0 +1,149 @@
+:root {
+  --tinta: #1d2721;
+  --tinta-suave: #56645b;
+  --papel: #f4f6f2;
+  --tarjeta: #ffffff;
+  --linea: #d8ded5;
+  --encina: #2e5e45;
+  --encina-clara: #e2ede5;
+  --sobre-encina: #ffffff;
+  --ambar: #e9a400;
+  --ambar-clara: #fdf1d0;
+  /* Para letras en ámbar: el de las barras no llega al contraste mínimo sobre fondo claro */
+  --ambar-texto: #a37200;
+  --queja: #b4380f;
+  --queja-clara: #fbe6dd;
+  --foco: #2e5e45;
+  --radio: 10px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tinta: #e6ece7;
+    --tinta-suave: #a3b1a8;
+    --papel: #121a16;
+    --tarjeta: #1b2620;
+    --linea: #2f3d35;
+    --encina: #6fbf93;
+    --encina-clara: #213a2d;
+    --sobre-encina: #0f1712;
+    --ambar: #f2b93a;
+    --ambar-clara: #3a2f12;
+    --ambar-texto: #f2b93a;
+    --queja: #f08a63;
+    --queja-clara: #3d2219;
+    --foco: #8fd4ad;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--papel);
+  color: var(--tinta);
+  font:
+    400 1.0625rem/1.55 'Source Sans 3',
+    system-ui,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+a {
+  color: var(--encina);
+}
+
+:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+/* Piezas de formulario compartidas por todas las pantallas */
+
+.campo {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.campo label {
+  font-weight: 600;
+}
+
+.campo input,
+.campo textarea {
+  font: inherit;
+  color: inherit;
+  background: var(--tarjeta);
+  border: 1.5px solid var(--linea);
+  border-radius: var(--radio);
+  padding: 0.7rem 0.85rem;
+  width: 100%;
+}
+
+.campo input:focus,
+.campo textarea:focus {
+  border-color: var(--encina);
+  outline: none;
+}
+
+.campo .ayuda {
+  color: var(--tinta-suave);
+  font-size: 0.92rem;
+}
+
+.campo .error {
+  color: var(--queja);
+  font-size: 0.92rem;
+}
+
+.boton {
+  font:
+    600 1rem/1 'Source Sans 3',
+    system-ui,
+    sans-serif;
+  border: 0;
+  border-radius: var(--radio);
+  padding: 0.85rem 1.2rem;
+  cursor: pointer;
+  background: var(--encina);
+  color: var(--sobre-encina);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.boton:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.boton.secundario {
+  background: transparent;
+  color: var(--tinta);
+  border: 1.5px solid var(--linea);
+}
+
+.aviso-error {
+  background: var(--queja-clara);
+  color: var(--queja);
+  border-radius: var(--radio);
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 1rem;
+}

@@ -1,0 +1,161 @@
+.hoja {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 2rem;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1 {
+  font-size: clamp(2.2rem, 9vw, 3rem);
+  margin-bottom: 1.5rem;
+}
+
+.sub {
+  color: var(--tinta-suave);
+  margin: 0 0 0.4rem;
+}
+
+.negocio {
+  font-weight: 600;
+  color: var(--encina);
+}
+
+.cargando {
+  color: var(--tinta-suave);
+}
+
+/* Las cinco notas: casillas grandes para el pulgar que se rellenan hasta la elegida */
+
+.notas {
+  border: 0;
+  padding: 0;
+  margin: 0 0 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.45rem;
+}
+
+.notas legend {
+  padding: 0;
+  margin-bottom: 0.6rem;
+}
+
+.nota {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.2rem;
+  padding: 0.9rem 0.2rem 0.7rem;
+  border: 1.5px solid var(--linea);
+  border-radius: var(--radio);
+  background: var(--tarjeta);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+
+.nota input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nota:has(input:focus-visible) {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.numero {
+  font:
+    800 1.9rem/1 'Bricolage Grotesque',
+    system-ui,
+    sans-serif;
+}
+
+.texto {
+  font-size: 0.78rem;
+  color: var(--tinta-suave);
+  text-align: center;
+  line-height: 1.15;
+}
+
+.nota.llena {
+  background: var(--ambar-clara);
+  border-color: var(--ambar);
+}
+
+.nota.elegida {
+  background: var(--ambar);
+  border-color: var(--ambar);
+  color: #2a1f00;
+}
+
+.nota.elegida .texto {
+  color: #2a1f00;
+  font-weight: 600;
+}
+
+.error-nota {
+  color: var(--queja);
+  margin: -0.8rem 0 1rem;
+}
+
+.opcional {
+  font-weight: 400;
+  color: var(--tinta-suave);
+}
+
+.contador {
+  justify-self: end;
+}
+
+.enviar {
+  width: 100%;
+  padding: 1.05rem;
+  font-size: 1.1rem;
+}
+
+.privacidad {
+  color: var(--tinta-suave);
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 0.9rem;
+}
+
+.gracias p {
+  font-size: 1.15rem;
+  margin: 0 0 1rem;
+}
+
+.google {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  border-radius: var(--radio);
+  background: var(--tarjeta);
+  border: 1.5px solid var(--linea);
+}
+
+.google p {
+  font-size: 1rem;
+}
+
+.google .boton {
+  width: 100%;
+}
+
+.marca {
+  margin-top: auto;
+  padding-top: 2.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--tinta-suave);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nota {
+    transition: none;
+  }
+}
