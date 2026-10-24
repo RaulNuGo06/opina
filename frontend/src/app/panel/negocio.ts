@@ -2,14 +2,15 @@ import { Component, OnInit, computed, inject, input, signal } from '@angular/cor
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Api, Miembro, Opinion, Resumen, mensajeDeError } from '../api/api';
+import { Informe } from './informe';
 import { MiCuenta } from './mi-cuenta';
-import { haceCuanto, nota } from './textos';
+import { TEMAS, haceCuanto, nota } from './textos';
 
 const POR_PAGINA = 20;
 
 @Component({
   selector: 'app-negocio-panel',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, Informe],
   templateUrl: './negocio.html',
   styleUrl: './negocio.css',
 })
@@ -53,6 +54,7 @@ export class NegocioPanel implements OnInit {
   protected readonly hayMas = computed(() => this.opiniones().length < this.total());
   protected readonly haceCuanto = haceCuanto;
   protected readonly nota = nota;
+  protected readonly temas = TEMAS;
 
   async ngOnInit() {
     try {

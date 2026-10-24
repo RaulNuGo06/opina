@@ -1,3 +1,5 @@
+import { Tema } from '../api/api';
+
 /** "Bar La Plaza (Almendralejo)" → "bar-la-plaza-almendralejo": mismas reglas que el backend para el enlace. */
 export function aSlug(nombre: string): string {
   return nombre
@@ -10,6 +12,17 @@ export function aSlug(nombre: string): string {
     .slice(0, 60)
     .replace(/-+$/, '');
 }
+
+/** Cómo se llama cada tema en el panel */
+export const TEMAS: Record<Tema, string> = {
+  ATENCION: 'Atención',
+  ESPERA: 'Espera',
+  CALIDAD: 'Calidad',
+  PRECIO: 'Precio',
+  LIMPIEZA: 'Limpieza',
+  AMBIENTE: 'Ambiente',
+  OTRO: 'Otros',
+};
 
 const relativo = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
 

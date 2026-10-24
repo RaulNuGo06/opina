@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 /** Añade a Swagger UI el botón "Authorize" para pegar el token de /api/auth/login y probar el panel. */
 @Configuration(proxyBeanMethods = false)
 @OpenAPIDefinition(
-        info = @Info(title = "opInA API", version = "fase 3",
+        info = @Info(title = "opInA API", version = "fase 4",
                 description = "Opiniones de clientes para negocios locales. "
                         + "Cuenta de demostración (perfil demo): dueno@barlaplaza.demo / demo-opina-2026"),
         security = @SecurityRequirement(name = "token"))

@@ -10,8 +10,11 @@ import com.opina.negocio.Negocio;
 import com.opina.negocio.NegocioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
 import java.time.Instant;
@@ -22,10 +25,21 @@ import java.util.UUID;
  * para preparar datos sin pasar por HTTP. Todo lleva un sufijo aleatorio, así cada test
  * trabaja con sus propios datos y no hace falta vaciar la base de datos entre tests.
  */
-@SpringBootTest
+// El clasificador automático no corre en los tests: cada test lo lanza cuando le hace falta
+@SpringBootTest(properties = "opina.ia.intervalo=PT1H")
 @AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
+@Import({TestcontainersConfiguration.class, PruebaDeApi.IaDePrueba.class})
 public abstract class PruebaDeApi {
+
+    @TestConfiguration(proxyBeanMethods = false)
+    static class IaDePrueba {
+
+        @Bean
+        @Primary
+        AsistenteFalso asistenteFalso() {
+            return new AsistenteFalso();
+        }
+    }
 
     /** Hash BCrypt de "contrasena-de-prueba", calculado una vez para no gastar tiempo en cada test. */
     protected static final String CONTRASENA = "contrasena-de-prueba";

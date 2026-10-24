@@ -55,6 +55,10 @@
         </ol>
       }
     </section>
+
+    @if (r.total > 0) {
+      <app-informe [slug]="slug()" />
+    }
   }
 
   @if (opiniones().length > 0) {
@@ -76,7 +80,15 @@
               } @else {
                 <p class="comentario sin">Sin comentario</p>
               }
-              <time class="suave" [attr.datetime]="o.creadaEn">{{ haceCuanto(o.creadaEn) }}</time>
+              <p class="detalles">
+                <time class="suave" [attr.datetime]="o.creadaEn">{{ haceCuanto(o.creadaEn) }}</time>
+                @if (o.tema) {
+                  <span class="chip">{{ temas[o.tema] }}</span>
+                }
+                @if (o.urgente) {
+                  <span class="chip urgente">Urgente</span>
+                }
+              </p>
             </div>
           </li>
         }

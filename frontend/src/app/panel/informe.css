@@ -1,0 +1,155 @@
+.informe {
+  margin-top: 2.5rem;
+}
+
+.cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+h2 {
+  font-size: 1.35rem;
+}
+
+h3 {
+  font-size: 1.05rem;
+  margin: 1.75rem 0 0.75rem;
+}
+
+.suave {
+  color: var(--tinta-suave);
+}
+
+/* Selector de periodo */
+
+.periodos {
+  display: inline-flex;
+  border: 1.5px solid var(--linea);
+  border-radius: var(--radio);
+  overflow: hidden;
+}
+
+.periodos button {
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--tinta);
+  background: var(--tarjeta);
+  border: 0;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+}
+
+.periodos button + button {
+  border-left: 1.5px solid var(--linea);
+}
+
+.periodos button[aria-pressed='true'] {
+  background: var(--encina);
+  color: var(--sobre-encina);
+}
+
+/* El resumen de la IA: lo primero que se lee */
+
+.resumen-ia {
+  padding: 1.25rem 1.4rem;
+  border-radius: var(--radio);
+  background: var(--tarjeta);
+  border: 1.5px solid var(--linea);
+  border-left: 5px solid var(--ambar);
+}
+
+.resumen-ia p {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.6;
+}
+
+.resumen-ia .firma {
+  margin-top: 0.75rem;
+  font-size: 0.88rem;
+  color: var(--tinta-suave);
+}
+
+.analizando {
+  color: var(--tinta-suave);
+  margin: 1rem 0 0;
+}
+
+.enlace {
+  font: inherit;
+  color: var(--encina);
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Urgentes */
+
+.urgentes h3 {
+  color: var(--queja);
+}
+
+.urgentes ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.urgentes li {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radio);
+  background: var(--queja-clara);
+}
+
+.urgentes p {
+  margin: 0 0 0.2rem;
+}
+
+.urgentes .suave {
+  font-size: 0.9rem;
+}
+
+/* Temas */
+
+.temas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+  max-width: 34rem;
+}
+
+.temas li {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr 2rem;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.barra {
+  height: 0.75rem;
+  border-radius: 999px;
+  background: var(--tarjeta);
+  border: 1px solid var(--linea);
+  overflow: hidden;
+}
+
+.barra span {
+  display: block;
+  height: 100%;
+  background: var(--encina);
+}
+
+.cuantas {
+  color: var(--tinta-suave);
+  font-variant-numeric: tabular-nums;
+}

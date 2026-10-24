@@ -1,5 +1,7 @@
 package com.opina.opinion;
 
+import com.opina.ia.Clasificacion.Sentimiento;
+import com.opina.ia.Clasificacion.Tema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -32,10 +34,13 @@ public final class OpinionDtos {
     public record OpinionCreada(UUID id, String urlResenaGoogle) {
     }
 
-    public record OpinionVista(UUID id, int puntuacion, String comentario, Instant creadaEn) {
+    /** tema y sentimiento son null mientras la IA no la haya clasificado (o si no tiene comentario). */
+    public record OpinionVista(UUID id, int puntuacion, String comentario, Instant creadaEn,
+                               Tema tema, Sentimiento sentimiento, boolean urgente) {
 
         static OpinionVista de(Opinion opinion) {
-            return new OpinionVista(opinion.getId(), opinion.getPuntuacion(), opinion.getComentario(), opinion.getCreadaEn());
+            return new OpinionVista(opinion.getId(), opinion.getPuntuacion(), opinion.getComentario(), opinion.getCreadaEn(),
+                    opinion.getTema(), opinion.getSentimiento(), opinion.isUrgente());
         }
     }
 
