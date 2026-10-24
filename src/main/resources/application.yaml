@@ -14,6 +14,12 @@ spring:
     problemdetails:
       enabled: true
 
+opina:
+  jwt:
+    # Al menos 32 caracteres. Si falta, se genera uno aleatorio en cada arranque (solo para desarrollo)
+    secreto: ${JWT_SECRET:}
+    duracion: 8h
+
 management:
   endpoints:
     web:

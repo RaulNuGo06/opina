@@ -1,56 +1,43 @@
 package com.opina.opinion;
 
-import com.opina.TestcontainersConfiguration;
+import com.opina.PruebaDeApi;
 import com.opina.negocio.Negocio;
-import com.opina.negocio.NegocioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Prueba la API de punta a punta contra PostgreSQL: controlador, validación, servicio, JPA y migraciones.
- * Cada test crea su propio negocio, así que no dependen unos de otros ni hace falta limpiar la base de datos.
+ * Opinar es público (el cliente no tiene cuenta): los POST de estos tests van sin token a propósito.
+ * Leer las opiniones es del panel: hace falta ser dueño o empleado del negocio.
  */
-@SpringBootTest
-@AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
-class OpinionApiTest {
-
-    @Autowired
-    MockMvcTester mvc;
-
-    @Autowired
-    NegocioRepository negocios;
+class OpinionApiTest extends PruebaDeApi {
 
     @Autowired
     OpinionRepository opiniones;
 
+    Cuenta dueno;
     Negocio negocio;
 
     @BeforeEach
     void crearNegocio() {
-        negocio = nuevoNegocio();
+        dueno = nuevaCuenta();
+        negocio = nuevoNegocio(dueno);
     }
 
     @Test
     void guardaLaOpinionYDevuelveElEnlaceDeGoogle() {
-        var respuesta = mvc.post().uri(opinionesDe(negocio))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {"puntuacion": 5, "comentario": "  Muy buen trato  "}""").exchange();
+        var respuesta = opinar("""
+                {"puntuacion": 5, "comentario": "  Muy buen trato  "}""");
 
         assertThat(respuesta).hasStatus(HttpStatus.CREATED);
         assertThat(respuesta).bodyJson().extractingPath("$.urlResenaGoogle").isEqualTo(negocio.getUrlResenaGoogle());
@@ -65,10 +52,8 @@ class OpinionApiTest {
     @Test
     void tambienOfreceGoogleAQuienPuntuaBajo() {
         // Enseñar el enlace solo a los clientes contentos (review gating) va contra las normas de Google
-        var respuesta = mvc.post().uri(opinionesDe(negocio))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {"puntuacion": 1, "comentario": "La comida llegó fría"}""").exchange();
+        var respuesta = opinar("""
+                {"puntuacion": 1, "comentario": "La comida llegó fría"}""");
 
         assertThat(respuesta).hasStatus(HttpStatus.CREATED);
         assertThat(respuesta).bodyJson().extractingPath("$.urlResenaGoogle").isEqualTo(negocio.getUrlResenaGoogle());
@@ -76,21 +61,16 @@ class OpinionApiTest {
 
     @Test
     void unComentarioEnBlancoSeGuardaComoSinComentario() {
-        mvc.post().uri(opinionesDe(negocio))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {"puntuacion": 4, "comentario": "   "}""")
-                .assertThat().hasStatus(HttpStatus.CREATED);
+        assertThat(opinar("""
+                {"puntuacion": 4, "comentario": "   "}""")).hasStatus(HttpStatus.CREATED);
 
-        assertThat(opiniones.findAll()).filteredOn(o -> o.getNegocio().getId().equals(negocio.getId()))
+        assertThat(opiniones.findByNegocioOrderByCreadaEnDesc(negocio, Pageable.unpaged()))
                 .singleElement().extracting(Opinion::getComentario).isNull();
     }
 
     @Test
     void rechazaPuntuacionFueraDeRangoYComentarioDemasiadoLargo() {
-        var respuesta = mvc.post().uri(opinionesDe(negocio))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"puntuacion\": 6, \"comentario\": \"" + "x".repeat(1001) + "\"}").exchange();
+        var respuesta = opinar("{\"puntuacion\": 6, \"comentario\": \"" + "x".repeat(1001) + "\"}");
 
         assertThat(respuesta).hasStatus(HttpStatus.BAD_REQUEST);
         assertThat(respuesta).bodyJson().extractingPath("$.errores.puntuacion").isEqualTo("La puntuación va de 1 a 5");
@@ -100,9 +80,7 @@ class OpinionApiTest {
 
     @Test
     void rechazaUnaOpinionSinPuntuacion() {
-        var respuesta = mvc.post().uri(opinionesDe(negocio))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{}").exchange();
+        var respuesta = opinar("{}");
 
         assertThat(respuesta).hasStatus(HttpStatus.BAD_REQUEST);
         assertThat(respuesta).bodyJson().extractingPath("$.errores.puntuacion").isEqualTo("La puntuación es obligatoria");
@@ -127,19 +105,19 @@ class OpinionApiTest {
         guardar(negocio, 5, "nueva", ahora);
         guardar(negocio, 4, "media", ahora.minus(1, ChronoUnit.DAYS));
 
-        var primera = mvc.get().uri(opinionesDe(negocio) + "?pagina=0&tamano=2").exchange();
+        var primera = leer(dueno, "?pagina=0&tamano=2");
         assertThat(primera).hasStatusOk();
         assertThat(primera).bodyJson().extractingPath("$.contenido[*].comentario").asArray()
                 .containsExactly("nueva", "media");
         assertThat(primera).bodyJson().extractingPath("$.total").isEqualTo(3);
 
-        assertThat(mvc.get().uri(opinionesDe(negocio) + "?pagina=1&tamano=2"))
+        assertThat(leer(dueno, "?pagina=1&tamano=2"))
                 .bodyJson().extractingPath("$.contenido[*].comentario").asArray().containsExactly("antigua");
     }
 
     @Test
     void rechazaUnTamanoDePaginaExagerado() {
-        var respuesta = mvc.get().uri(opinionesDe(negocio) + "?tamano=500").exchange();
+        var respuesta = leer(dueno, "?tamano=500");
 
         assertThat(respuesta).hasStatus(HttpStatus.BAD_REQUEST);
         assertThat(respuesta).bodyJson().extractingPath("$.errores.tamano").isEqualTo("El tamaño va de 1 a 100");
@@ -147,31 +125,62 @@ class OpinionApiTest {
 
     @Test
     void elResumenCuentaSoloLasOpinionesDeSuNegocio() {
-        Negocio otro = nuevoNegocio();
+        Negocio otro = nuevoNegocio(nuevaCuenta());
         guardar(negocio, 5, null, Instant.now());
         guardar(negocio, 4, null, Instant.now());
         guardar(negocio, 1, null, Instant.now());
         guardar(otro, 1, "no debe contar", Instant.now());
 
-        var respuesta = mvc.get().uri(opinionesDe(negocio) + "/resumen").exchange();
+        var respuesta = leer(dueno, "/resumen");
 
         assertThat(respuesta).hasStatusOk();
         assertThat(respuesta).bodyJson().isEqualTo("""
                 {"total": 3, "media": 3.3, "porPuntuacion": {"5": 1, "4": 1, "3": 0, "2": 0, "1": 1}}""");
-        assertThat(mvc.get().uri(opinionesDe(negocio)))
-                .bodyJson().extractingPath("$.contenido[*].comentario").asArray().doesNotContain("no debe contar");
+        assertThat(leer(dueno, "")).bodyJson().extractingPath("$.contenido[*].comentario").asArray()
+                .doesNotContain("no debe contar");
     }
 
     @Test
-    void devuelveLosDatosPublicosDelNegocio() {
+    void elEmpleadoTambienVeLasOpiniones() {
+        Cuenta empleado = nuevaCuenta();
+        hacerEmpleado(negocio, empleado);
+
+        assertThat(leer(empleado, "")).hasStatusOk();
+        assertThat(leer(empleado, "/resumen")).hasStatusOk();
+    }
+
+    @Test
+    void leerLasOpinionesExigeSesion() {
+        assertThat(mvc.get().uri(opinionesDe(negocio)).exchange()).hasStatus(HttpStatus.UNAUTHORIZED);
+        assertThat(mvc.get().uri(opinionesDe(negocio) + "/resumen").exchange()).hasStatus(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void quienLlevaOtroNegocioNoVeEstasOpiniones() {
+        Cuenta deOtroNegocio = nuevaCuenta();
+        nuevoNegocio(deOtroNegocio);
+        guardar(negocio, 2, "privada", Instant.now());
+
+        var listado = leer(deOtroNegocio, "");
+
+        assertThat(listado).hasStatus(HttpStatus.FORBIDDEN);
+        assertThat(listado).bodyJson().extractingPath("$.detail").isEqualTo("No tienes acceso a este negocio");
+        assertThat(leer(deOtroNegocio, "/resumen")).hasStatus(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void devuelveLosDatosPublicosDelNegocioSinSesion() {
         assertThat(mvc.get().uri("/api/negocios/" + negocio.getSlug()))
                 .hasStatusOk()
                 .bodyJson().isEqualTo("{\"slug\": \"%s\", \"nombre\": \"Bar de prueba\"}".formatted(negocio.getSlug()));
     }
 
-    private Negocio nuevoNegocio() {
-        String slug = "bar-" + UUID.randomUUID().toString().substring(0, 8);
-        return negocios.save(new Negocio(slug, "Bar de prueba", "https://g.page/r/" + slug + "/review"));
+    private MvcTestResult opinar(String json) {
+        return mvc.post().uri(opinionesDe(negocio)).contentType(MediaType.APPLICATION_JSON).content(json).exchange();
+    }
+
+    private MvcTestResult leer(Cuenta cuenta, String sufijo) {
+        return mvc.get().uri(opinionesDe(negocio) + sufijo).header(HttpHeaders.AUTHORIZATION, cuenta.bearer()).exchange();
     }
 
     private void guardar(Negocio n, int puntuacion, String comentario, Instant fecha) {

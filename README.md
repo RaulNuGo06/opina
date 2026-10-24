@@ -6,18 +6,29 @@ Opiniones de clientes para negocios locales, con resúmenes hechos por IA.
 
 El cliente acerca el móvil a una tarjeta NFC o escanea un QR en la mesa, la peluquería o el gimnasio, y deja su opinión en 20 segundos. El negocio ve en un panel qué funciona y qué no. Por ejemplo: *"esta semana seis personas se quejan de la espera de los sábados"*.
 
-> **Estado:** fase 1 de 4. Está hecha la API de negocios y opiniones. El panel en Angular, el inicio de sesión y la IA llegan en las siguientes fases ([hoja de ruta](#hoja-de-ruta)).
+> **Estado:** fase 2 de 4. Están hechas la API de opiniones y las cuentas de negocio con inicio de sesión. El panel en Angular y la IA llegan en las siguientes fases ([hoja de ruta](#hoja-de-ruta)).
 
 ## Qué hace ya
 
+**Para el cliente que opina** (sin cuenta):
+
 | Método | Ruta | Para qué |
 |---|---|---|
-| `GET` | `/api/negocios/{slug}` | Nombre del negocio, para el formulario público |
+| `GET` | `/api/negocios/{slug}` | Nombre del negocio, para el formulario |
 | `POST` | `/api/negocios/{slug}/opiniones` | Guarda una opinión (nota de 1 a 5 y comentario opcional) |
-| `GET` | `/api/negocios/{slug}/opiniones?pagina=0&tamano=20` | Opiniones de la más nueva a la más antigua |
-| `GET` | `/api/negocios/{slug}/opiniones/resumen` | Total, nota media y cuántas hay de cada nota |
 
-La documentación interactiva (Swagger UI) está en `/docs`.
+**Para el negocio** (con sesión: `Authorization: Bearer <token>`):
+
+| Método | Ruta | Quién | Para qué |
+|---|---|---|---|
+| `POST` | `/api/auth/registro` · `/api/auth/login` | Cualquiera | Crear cuenta o entrar. Devuelve un token JWT válido 8 horas |
+| `GET` | `/api/yo` | Con sesión | Mis datos y los negocios a los que tengo acceso |
+| `POST` | `/api/negocios` | Con sesión | Dar de alta un negocio; quien lo crea queda como dueño |
+| `GET` | `/api/negocios/{slug}/opiniones?pagina=0&tamano=20` | Dueño o empleado | Opiniones de la más nueva a la más antigua |
+| `GET` | `/api/negocios/{slug}/opiniones/resumen` | Dueño o empleado | Total, nota media y cuántas hay de cada nota |
+| `GET` `POST` `DELETE` | `/api/negocios/{slug}/miembros` | Dueño | Ver, añadir o quitar empleados |
+
+La documentación interactiva (Swagger UI) está en `/docs`. Para probar lo privado, entra con `/api/auth/login`, copia el token y pégalo en el botón **Authorize**.
 
 ```bash
 curl -X POST localhost:8080/api/negocios/bar-la-plaza/opiniones \
@@ -40,6 +51,18 @@ Los errores siguen el estándar Problem Details (RFC 9457) e indican qué campo 
 
 ## Decisiones técnicas
 
+### Seguridad
+
+- **JWT firmado por la propia API con el resource server de Spring Security**, sin librerías de terceros. El secreto llega por la variable `JWT_SECRET` y nunca está en el código. Si falta, se genera uno aleatorio al arrancar y se avisa en el log, así no se puede desplegar sin querer con un secreto conocido.
+- **El token solo dice quién eres, no qué puedes hacer.** Los permisos se consultan en cada petición, así que quitar a un empleado le corta el acceso al momento aunque su token siga vigente. Hay un test que lo comprueba (`alQuitarAUnEmpleadoPierdeElAccesoAlMomentoAunqueSuTokenSigaVigente`).
+- **Los permisos están en un solo sitio** (`ControlAcceso`): todos los servicios del panel pasan por él. 401 si no hay sesión, 403 si no eres del negocio y "solo el dueño" para gestionar miembros.
+- **El login no delata qué emails tienen cuenta.** El mensaje de error es el mismo si falla el email o la contraseña, y se calcula un hash aunque el email no exista, para que el tiempo de respuesta tampoco lo revele.
+- **Contraseñas con BCrypt** y el prefijo `{bcrypt}`: si un día se cambia de algoritmo, los hashes antiguos siguen valiendo. Mínimo 10 caracteres y máximo 72, que es lo que BCrypt usa de verdad.
+- **Solo se puede añadir como empleado a quien ya tiene cuenta**, así nadie recibe una contraseña elegida por otra persona.
+- **Sin CSRF ni sesiones en el servidor:** el token viaja en la cabecera `Authorization`, no en una cookie.
+
+### Datos y API
+
 - **Sin filtrar a los clientes descontentos.** Muchas herramientas de reseñas solo mandan a Google a quien pone 4 o 5 estrellas. Eso se llama *review gating* y va contra las normas de Google. Opina devuelve el enlace de reseña sea cual sea la nota, y hay un test que lo comprueba (`tambienOfreceGoogleAQuienPuntuaBajo`). El valor para el negocio está en entender las opiniones, no en esconderlas.
 - **El esquema lo controla Flyway, no Hibernate.** Las tablas, restricciones (`puntuacion between 1 and 5`, formato del slug) e índices se definen en SQL versionado. Hibernate arranca en modo `validate` y falla si las entidades no encajan con la base de datos.
 - **Tests contra PostgreSQL real.** Testcontainers levanta la misma versión que en producción, así que lo que se prueba es lo que se despliega. Cada test crea su propio negocio, de modo que no dependen unos de otros. Uno de ellos comprueba que las opiniones de un negocio no aparecen en otro.
@@ -55,9 +78,12 @@ docker compose up -d                                   # PostgreSQL en localhost
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=demo # API en localhost:8080
 ```
 
-El perfil `demo` carga **Bar La Plaza**, un bar inventado con 12 opiniones de ejemplo. Prueba con `GET /api/negocios/bar-la-plaza/opiniones/resumen`.
+El perfil `demo` carga **Bar La Plaza**, un bar inventado con 12 opiniones de ejemplo, y la cuenta de su dueña:
 
-Para usar otra base de datos: `DB_URL`, `DB_USER` y `DB_PASSWORD`.
+- Email: `dueno@barlaplaza.demo`
+- Contraseña: `demo-opina-2026`
+
+Variables de entorno: `DB_URL`, `DB_USER`, `DB_PASSWORD` y `JWT_SECRET` (al menos 32 caracteres).
 
 ### Tests
 
@@ -68,12 +94,12 @@ DB_URL=jdbc:postgresql://localhost:5432/opina_test ./mvnw test   # sin Docker, c
 
 ## Tecnologías
 
-Java 21 · Spring Boot 4.1 · Spring Data JPA (Hibernate) · PostgreSQL 17 · Flyway · Bean Validation · springdoc-openapi · JUnit 5 · AssertJ · Testcontainers · GitHub Actions
+Java 21 · Spring Boot 4.1 · Spring Security (OAuth2 Resource Server, JWT) · Spring Data JPA (Hibernate) · PostgreSQL 17 · Flyway · Bean Validation · springdoc-openapi · JUnit 5 · AssertJ · Testcontainers · GitHub Actions
 
 ## Hoja de ruta
 
 - [x] **Fase 1:** API de negocios y opiniones, validación, tests y CI
-- [ ] **Fase 2:** cuentas de negocio con Spring Security y JWT (dueño y empleado); el listado y el resumen pasan a ser privados
+- [x] **Fase 2:** cuentas de negocio con Spring Security y JWT (dueño y empleado); el listado y el resumen pasan a ser privados
 - [ ] **Fase 3:** formulario público y panel del negocio en Angular
 - [ ] **Fase 4:** IA con la API de Claude: tema y urgencia de cada opinión, resumen semanal y propuesta de respuesta a cada queja
 - [ ] Despliegue con una demo pública
