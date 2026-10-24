@@ -2,15 +2,16 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Api, erroresDeCampos, mensajeDeError } from '../api/api';
+import { Logo } from '../comun/logo';
 import { Sesion } from '../sesion/sesion';
 
 @Component({
   selector: 'app-registro',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, Logo],
   styleUrl: './cuenta.css',
   template: `
     <main class="acceso">
-      <a class="logo" routerLink="/"><img src="favicon.svg" alt="" />Opina</a>
+      <app-logo class="cabecera-logo" />
       <h1>Crea tu cuenta</h1>
       <p class="intro">Después darás de alta tu negocio o te añadirán al de tu empresa.</p>
 

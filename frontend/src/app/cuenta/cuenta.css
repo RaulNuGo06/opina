@@ -4,22 +4,9 @@
   padding: 3rem 1rem;
 }
 
-.logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font:
-    800 1.35rem/1 'Bricolage Grotesque',
-    system-ui,
-    sans-serif;
-  color: var(--tinta);
-  text-decoration: none;
+.cabecera-logo {
+  display: block;
   margin-bottom: 2.5rem;
-}
-
-.logo img {
-  width: 28px;
-  height: 28px;
 }
 
 h1 {

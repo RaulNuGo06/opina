@@ -1,8 +1,8 @@
-# Opina
+# opInA
 
 [![CI](https://github.com/RaulNuGo06/opina/actions/workflows/ci.yml/badge.svg)](https://github.com/RaulNuGo06/opina/actions/workflows/ci.yml)
 
-Opiniones de clientes para negocios locales, con resúmenes hechos por IA.
+Opiniones de clientes para negocios locales, con resúmenes hechos por IA. El nombre lleva la IA dentro: op**I**n**A**.
 
 El cliente acerca el móvil a una tarjeta NFC o escanea un QR en la mesa, la peluquería o el gimnasio, y deja su opinión en 20 segundos. El negocio ve en un panel qué funciona y qué no. Por ejemplo: *"esta semana seis personas se quejan de la espera de los sábados"*.
 
@@ -86,7 +86,7 @@ Los errores siguen el estándar Problem Details (RFC 9457) e indican qué campo 
 
 ### Datos y API
 
-- **Sin filtrar a los clientes descontentos.** Muchas herramientas de reseñas solo mandan a Google a quien pone 4 o 5 estrellas. Eso se llama *review gating* y va contra las normas de Google. Opina devuelve el enlace de reseña sea cual sea la nota, y hay un test que lo comprueba (`tambienOfreceGoogleAQuienPuntuaBajo`). El valor para el negocio está en entender las opiniones, no en esconderlas.
+- **Sin filtrar a los clientes descontentos.** Muchas herramientas de reseñas solo mandan a Google a quien pone 4 o 5 estrellas. Eso se llama *review gating* y va contra las normas de Google. opInA devuelve el enlace de reseña sea cual sea la nota, y hay un test que lo comprueba (`tambienOfreceGoogleAQuienPuntuaBajo`). El valor para el negocio está en entender las opiniones, no en esconderlas.
 - **El esquema lo controla Flyway, no Hibernate.** Las tablas, restricciones (`puntuacion between 1 and 5`, formato del slug) e índices se definen en SQL versionado. Hibernate arranca en modo `validate` y falla si las entidades no encajan con la base de datos.
 - **Tests contra PostgreSQL real.** Testcontainers levanta la misma versión que en producción, así que lo que se prueba es lo que se despliega. Cada test crea su propio negocio, de modo que no dependen unos de otros. Uno de ellos comprueba que las opiniones de un negocio no aparecen en otro.
 - **Validación en dos capas.** Bean Validation da mensajes claros a quien usa la API, y las restricciones de la base de datos protegen los datos aunque alguien se salte la API.

@@ -1,16 +1,17 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { mensajeDeError } from '../api/api';
+import { Logo } from '../comun/logo';
 import { Sesion } from '../sesion/sesion';
 import { MiCuenta } from './mi-cuenta';
 
 /** Cabecera común del panel. Carga la cuenta una vez; las pantallas de dentro la leen de MiCuenta. */
 @Component({
   selector: 'app-marco',
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, Logo],
   template: `
     <header class="barra">
-      <a class="logo" routerLink="/panel"><img src="favicon.svg" alt="" />Opina</a>
+      <app-logo enlace="/panel" />
       @if (cuenta.yo(); as yo) {
         <span class="quien">{{ yo.nombre }}</span>
       }
@@ -36,21 +37,8 @@ import { MiCuenta } from './mi-cuenta';
       border-bottom: 1px solid var(--linea);
       background: var(--tarjeta);
     }
-    .logo {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
-      font:
-        800 1.2rem/1 'Bricolage Grotesque',
-        system-ui,
-        sans-serif;
-      color: var(--tinta);
-      text-decoration: none;
+    app-logo {
       margin-right: auto;
-    }
-    .logo img {
-      width: 24px;
-      height: 24px;
     }
     .quien {
       color: var(--tinta-suave);

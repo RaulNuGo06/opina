@@ -12,12 +12,12 @@ export const routes: Routes = [
   {
     path: 'entrar',
     loadComponent: () => import('./cuenta/entrar').then((m) => m.Entrar),
-    title: 'Entrar · Opina',
+    title: 'Entrar · opInA',
   },
   {
     path: 'registro',
     loadComponent: () => import('./cuenta/registro').then((m) => m.Registro),
-    title: 'Crear cuenta · Opina',
+    title: 'Crear cuenta · opInA',
   },
 
   // Panel del negocio: hace falta sesión
@@ -29,12 +29,12 @@ export const routes: Routes = [
       {
         path: '',
         loadComponent: () => import('./panel/mis-negocios').then((m) => m.MisNegocios),
-        title: 'Mis negocios · Opina',
+        title: 'Mis negocios · opInA',
       },
       {
         path: ':slug',
         loadComponent: () => import('./panel/negocio').then((m) => m.NegocioPanel),
-        title: 'Panel · Opina',
+        title: 'Panel · opInA',
       },
     ],
   },

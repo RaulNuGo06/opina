@@ -2,15 +2,16 @@ import { Component, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Api, mensajeDeError } from '../api/api';
+import { Logo } from '../comun/logo';
 import { Sesion } from '../sesion/sesion';
 
 @Component({
   selector: 'app-entrar',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, Logo],
   styleUrl: './cuenta.css',
   template: `
     <main class="acceso">
-      <a class="logo" routerLink="/"><img src="favicon.svg" alt="" />Opina</a>
+      <app-logo class="cabecera-logo" />
       <h1>Entra en tu panel</h1>
       <p class="intro">Para ver lo que opinan los clientes de tu negocio.</p>
 

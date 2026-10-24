@@ -9,6 +9,8 @@
   --sobre-encina: #ffffff;
   --ambar: #e9a400;
   --ambar-clara: #fdf1d0;
+  /* Para letras en ámbar: el de las barras no llega al contraste mínimo sobre fondo claro */
+  --ambar-texto: #a37200;
   --queja: #b4380f;
   --queja-clara: #fbe6dd;
   --foco: #2e5e45;
@@ -28,6 +30,7 @@
     --sobre-encina: #0f1712;
     --ambar: #f2b93a;
     --ambar-clara: #3a2f12;
+    --ambar-texto: #f2b93a;
     --queja: #f08a63;
     --queja-clara: #3d2219;
     --foco: #8fd4ad;
