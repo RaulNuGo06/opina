@@ -1,0 +1,138 @@
+<a class="volver" routerLink="/panel">Tus negocios</a>
+
+@if (!negocio()) {
+  <h1>No tienes acceso a este negocio</h1>
+  <p class="suave">Pide a quien lo lleva que te añada con tu email.</p>
+} @else {
+  <header class="cabecera">
+    <h1>{{ negocio()!.nombre }}</h1>
+
+    <div class="enlace-publico">
+      <span class="suave">Enlace para la tarjeta o el QR</span>
+      <div class="fila">
+        <a class="url" [href]="enlacePublico()" target="_blank" rel="noopener">{{
+          enlacePublico()
+        }}</a>
+        <button class="boton secundario" type="button" (click)="copiarEnlace()">
+          {{ copiado() ? 'Copiado' : 'Copiar' }}
+        </button>
+      </div>
+    </div>
+  </header>
+
+  @if (error()) {
+    <p class="aviso-error" role="alert">{{ error() }}</p>
+  }
+
+  @if (resumen(); as r) {
+    <section class="resumen" aria-labelledby="t-resumen">
+      <h2 id="t-resumen" class="oculto">Resumen</h2>
+      @if (r.total === 0) {
+        <div class="vacio">
+          <p class="grande">Aún no hay opiniones</p>
+          <p class="suave">
+            Pon el enlace en la tarjeta NFC o en un QR del local y aparecerán aquí.
+          </p>
+        </div>
+      } @else {
+        <div class="media">
+          <span class="cifra">{{ nota(r.media!) }}</span>
+          <span class="suave"
+            >de 5 · {{ r.total }} {{ r.total === 1 ? 'opinión' : 'opiniones' }}</span
+          >
+        </div>
+
+        <ol class="reparto" aria-label="Opiniones por nota">
+          @for (fila of reparto(); track fila.nota) {
+            <li>
+              <span class="etiqueta">{{ fila.nota }}</span>
+              <span class="barra" aria-hidden="true"
+                ><span [style.width.%]="fila.ancho"></span
+              ></span>
+              <span class="cuantas">{{ fila.cuantas }}</span>
+            </li>
+          }
+        </ol>
+      }
+    </section>
+  }
+
+  @if (opiniones().length > 0) {
+    <section aria-labelledby="t-opiniones">
+      <h2 id="t-opiniones">Últimas opiniones</h2>
+      <ul class="opiniones">
+        @for (o of opiniones(); track o.id) {
+          <li class="opinion">
+            <span
+              class="puntos"
+              [class]="tono(o.puntuacion)"
+              [attr.aria-label]="o.puntuacion + ' de 5'"
+            >
+              {{ o.puntuacion }}
+            </span>
+            <div>
+              @if (o.comentario) {
+                <p class="comentario">{{ o.comentario }}</p>
+              } @else {
+                <p class="comentario sin">Sin comentario</p>
+              }
+              <time class="suave" [attr.datetime]="o.creadaEn">{{ haceCuanto(o.creadaEn) }}</time>
+            </div>
+          </li>
+        }
+      </ul>
+      @if (hayMas()) {
+        <button
+          class="boton secundario mas"
+          type="button"
+          (click)="cargarMas()"
+          [disabled]="cargandoMas()"
+        >
+          {{ cargandoMas() ? 'Cargando…' : 'Ver más opiniones' }}
+        </button>
+      }
+    </section>
+  }
+
+  @if (esDueno()) {
+    <section class="equipo" aria-labelledby="t-equipo">
+      <h2 id="t-equipo">Quién ve este panel</h2>
+      <ul class="miembros">
+        @for (m of miembros(); track m.usuarioId) {
+          <li>
+            <div>
+              <span class="nombre">{{ m.nombre }}</span>
+              <span class="suave">{{ m.email }}</span>
+            </div>
+            @if (m.rol === 'DUENO') {
+              <span class="suave">Dueño</span>
+            } @else {
+              <button class="quitar" type="button" (click)="quitar(m)">Quitar</button>
+            }
+          </li>
+        }
+      </ul>
+
+      <form class="anadir" [formGroup]="formEquipo" (ngSubmit)="anadir()" novalidate>
+        <div class="campo">
+          <label for="email-nuevo">Añadir a alguien de tu equipo</label>
+          <div class="fila">
+            <input
+              id="email-nuevo"
+              type="email"
+              formControlName="email"
+              placeholder="email@ejemplo.com"
+            />
+            <button class="boton" type="submit">Añadir</button>
+          </div>
+          <span class="ayuda"
+            >Tiene que haberse creado antes una cuenta en Opina con ese email.</span
+          >
+        </div>
+        @if (errorEquipo()) {
+          <p class="aviso-error" role="alert">{{ errorEquipo() }}</p>
+        }
+      </form>
+    </section>
+  }
+}
