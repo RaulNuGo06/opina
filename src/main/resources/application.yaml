@@ -20,6 +20,13 @@ opina:
     secreto: ${JWT_SECRET:}
     duracion: 8h
 
+  ia:
+    # Sin clave, la aplicación funciona igual pero no clasifica ni resume
+    api-key: ${ANTHROPIC_API_KEY:}
+    modelo: ${OPINA_IA_MODELO:claude-opus-5-5}
+    # Cada cuánto se buscan opiniones nuevas para clasificar
+    intervalo: ${OPINA_IA_INTERVALO:PT10S}
+
 management:
   endpoints:
     web:
