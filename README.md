@@ -157,4 +157,4 @@ cd frontend && npx ng test --watch=false                         # App (Vitest)
 
 ## Autor
 
-**Raúl Núñez González**: [portfolio](https://raulnugo06.github.io) · [LinkedIn](https://www.linkedin.com/in/ra%C3%BAl-n%C3%BA%C3%B1ez-gonz%C3%A1lez-17032a389) · [GitHub](https://github.com/RaulNuGo06)
+**Raúl Núñez González**: [portfolio](https://raulnugo06.github.io) · [LinkedIn](https://www.linkedin.com/in/raulnugo06) · [GitHub](https://github.com/RaulNuGo06)
