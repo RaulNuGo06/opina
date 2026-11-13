@@ -42,3 +42,28 @@ jobs:
         run: npx ng test --watch=false
       - name: Compilar para producción
         run: npx ng build
+
+  # La imagen de la demo: se construye y se arranca contra un PostgreSQL de verdad
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Construir la imagen
+        run: docker build -t opina .
+
+      - name: Arrancarla y comprobar que sirve la API y la app
+        run: |
+          docker network create red
+          docker run -d --name db --network red -e POSTGRES_DB=opina -e POSTGRES_USER=opina -e POSTGRES_PASSWORD=opina postgres:17-alpine
+          until docker exec db pg_isready -U opina -d opina; do sleep 1; done
+          docker run -d --name app --network red -p 8080:8080             -e SPRING_PROFILES_ACTIVE=demo -e DB_URL=jdbc:postgresql://db:5432/opina opina
+          for i in $(seq 1 60); do curl -fs localhost:8080/actuator/health && break; sleep 2; done
+          curl -fs localhost:8080/api/negocios/bar-la-plaza
+          curl -fs localhost:8080/ | grep -q '<app-root'
+          curl -fs localhost:8080/n/bar-la-plaza | grep -q '<app-root'
+          curl -fs localhost:8080/panel/bar-la-plaza | grep -q '<app-root'
+
+      - name: Logs de la aplicación
+        if: failure()
+        run: docker logs app
