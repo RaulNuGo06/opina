@@ -131,6 +131,24 @@ ANTHROPIC_API_KEY=sk-ant-... ./mvnw spring-boot:run -Dspring-boot.run.profiles=d
 
 Variables de entorno: `DB_URL`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET` (al menos 32 caracteres), `ANTHROPIC_API_KEY` (opcional), `OPINA_IA_MODELO` (por defecto `claude-opus-5-5`) y `OPINA_IA_INTERVALO` (cada cuánto se clasifican las nuevas, por defecto `PT10S`).
 
+### Con Docker
+
+La imagen lleva la API y la app de Angular juntas: Spring Boot sirve `/api` y el resto de rutas son de Angular.
+
+```bash
+docker compose up -d
+docker build -t opina .
+docker run -p 8080:8080 -e SPRING_PROFILES_ACTIVE=demo   -e DB_URL=jdbc:postgresql://host.docker.internal:5432/opina opina
+```
+
+Y se abre en `http://localhost:8080/n/bar-la-plaza`. La CI construye esta misma imagen, la arranca contra PostgreSQL y comprueba que responde.
+
+### Desplegarlo
+
+`render.yaml` es un blueprint de [Render](https://render.com) para la demo pública: un servicio web con la imagen Docker y el perfil `demo`. La base de datos va aparte (por ejemplo [Neon](https://neon.tech)); en Render solo hay que rellenar `DB_URL`, `DB_USER` y `DB_PASSWORD`. El secreto de los tokens lo genera Render.
+
+En la demo pública no se pone `ANTHROPIC_API_KEY`: las opiniones de ejemplo ya vienen clasificadas y así nadie gasta la clave escribiendo opiniones de prueba.
+
 ### Tests
 
 ```bash

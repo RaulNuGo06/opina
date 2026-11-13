@@ -1,0 +1,21 @@
+# Demo pública en Render: https://render.com/docs/blueprint-spec
+# La base de datos va aparte (por ejemplo Neon, que tiene plan gratuito sin caducidad).
+services:
+  - type: web
+    name: opina
+    runtime: docker
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      # Carga Bar La Plaza y la cuenta de su dueña
+      - key: SPRING_PROFILES_ACTIVE
+        value: demo
+      - key: JWT_SECRET
+        generateValue: true
+      # jdbc:postgresql://<host>/<base>?sslmode=require
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false

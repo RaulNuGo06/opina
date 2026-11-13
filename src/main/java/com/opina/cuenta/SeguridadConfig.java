@@ -29,6 +29,9 @@ public class SeguridadConfig {
                         .requestMatchers(HttpMethod.POST, "/api/negocios/*/opiniones").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/registro", "/api/auth/login").permitAll()
                         .requestMatchers("/docs/**", "/swagger-ui/**", "/v3/api-docs/**", "/actuator/health", "/error").permitAll()
+                        // La app de Angular cuando va dentro del jar: sus ficheros y sus rutas
+                        .requestMatchers(HttpMethod.GET, "/", "/*.html", "/*.js", "/*.css", "/*.svg", "/media/**",
+                                "/n/*", "/entrar", "/registro", "/panel", "/panel/*").permitAll()
                         // Todo lo demás es del panel del negocio
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()).authenticationEntryPoint(sinSesion))
